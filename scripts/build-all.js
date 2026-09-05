@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
  * 一键全量构建脚本 — 产出 4 个产物:
- *   1. 发票打印工具_x64-setup.exe          轻量版安装包 (NSIS)
- *   2. 发票打印工具_x64_绿色版.exe         轻量版绿色便携 (单文件 exe，无需 zip)
- *   3. 发票打印工具_x64_OCR版-setup.exe    OCR 版安装包 (NSIS)
- *   4. 发票打印工具_x64_OCR绿色版.zip      OCR 版绿色便携 (exe + models/)
+ *   1. 发票酱_x64-setup.exe          轻量版安装包 (NSIS)
+ *   2. 发票酱_x64_绿色版.exe         轻量版绿色便携 (单文件 exe，无需 zip)
+ *   3. 发票酱_x64_OCR版-setup.exe    OCR 版安装包 (NSIS)
+ *   4. 发票酱_x64_OCR绿色版.zip      OCR 版绿色便携 (exe + models/)
  *
  * 用法: node scripts/build-all.js
  *        npm run build:all
@@ -18,8 +18,8 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const pkg = require(path.join(ROOT, 'package.json'));
 const VERSION = pkg.version;
-const PRODUCT_NAME = '发票打印工具';
-const EXE_NAME = 'fapiao-print.exe';           // Cargo 编译出的二进制名
+const PRODUCT_NAME = '发票酱';
+const EXE_NAME = 'ticketchan.exe';           // Cargo 编译出的二进制名
 const ARCH = 'x64';
 
 const TARGET_RELEASE = path.join(ROOT, 'src-tauri', 'target', 'release');
@@ -104,9 +104,9 @@ function findNsisInstaller(label) {
  */
 function verifyModels() {
   const requiredModels = [
-    'PP-OCRv5_mobile_det.mnn',
-    'PP-OCRv5_mobile_rec.mnn',
-    'ppocr_keys_v5.txt',
+    'PP-OCRv6_small_det.mnn',
+    'PP-OCRv6_small_rec.mnn',
+    'ppocr_keys_v6_small.txt',
   ];
   if (!fs.existsSync(MODELS_SRC)) {
     throw new Error(`OCR 模型目录不存在: ${MODELS_SRC}`);
@@ -207,7 +207,7 @@ async function main() {
 
   // ─── Step 2: OCR 版编译 ─────────────────────────
   console.log(`\n${'─'.repeat(60)}`);
-  console.log('  [2/4] 编译 OCR 版 (含 PP-OCRv5)...');
+  console.log('  [2/4] 编译 OCR 版 (含 PP-OCRv6)...');
   console.log(`${'─'.repeat(60)}`);
   cleanNsisBundle();
   run('npx tauri build --features ocr --config src-tauri/tauri.ocr.conf.json');

@@ -33,7 +33,7 @@ jobs:
           $OutputEncoding = [System.Text.Encoding]::UTF8
           # 验证
           Write-Host "代码页: $(chcp)"
-          Write-Host "测试中文输出: 发票打印工具"
+          Write-Host "测试中文输出: 发票酱"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -73,10 +73,10 @@ jobs:
           Write-Host "`n=== 验证构建产物 ==="
           $dist = "dist"
           $expected = @(
-            "发票打印工具_*_x64-setup.exe",
-            "发票打印工具_*_x64_绿色版.exe",
-            "发票打印工具_*_x64_OCR版-setup.exe",
-            "发票打印工具_*_x64_OCR绿色版.zip"
+            "发票酱_*_x64-setup.exe",
+            "发票酱_*_x64_绿色版.exe",
+            "发票酱_*_x64_OCR版-setup.exe",
+            "发票酱_*_x64_OCR绿色版.zip"
           )
           $files = Get-ChildItem -Path $dist -File
           if ($files.Count -ne 4) {
@@ -98,9 +98,9 @@ jobs:
 
           $renameMap = @{
             # 模式: 不含中文的文件名 → 正确的中文名
-            "_${version}_x64-setup.exe"                = "发票打印工具_${version}_x64-setup.exe"
-            "_${version}_x64_OCR.-setup.exe"           = "发票打印工具_${version}_x64_OCR版-setup.exe"
-            "_${version}_x64_OCR-setup.exe"            = "发票打印工具_${version}_x64_OCR版-setup.exe"
+            "_${version}_x64-setup.exe"                = "发票酱_${version}_x64-setup.exe"
+            "_${version}_x64_OCR.-setup.exe"           = "发票酱_${version}_x64_OCR版-setup.exe"
+            "_${version}_x64_OCR-setup.exe"            = "发票酱_${version}_x64_OCR版-setup.exe"
           }
 
           foreach ($entry in $renameMap.GetEnumerator()) {
@@ -114,8 +114,8 @@ jobs:
 
           # 检查绿色便携版文件名（轻量版=exe, OCR版=zip）
           $zipRenameMap = @{
-            "_${version}_x64_.exe"                     = "发票打印工具_${version}_x64_绿色版.exe"
-            "_${version}_x64_OCR.zip"                  = "发票打印工具_${version}_x64_OCR绿色版.zip"
+            "_${version}_x64_.exe"                     = "发票酱_${version}_x64_绿色版.exe"
+            "_${version}_x64_OCR.zip"                  = "发票酱_${version}_x64_OCR绿色版.zip"
           }
 
           foreach ($entry in $zipRenameMap.GetEnumerator()) {
@@ -136,14 +136,49 @@ jobs:
             Write-Host "  $($_.Name)  ($sizeMB MB)"
           }
 
+      - name: Extract release notes from CHANGELOG
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        run: |
+          # 从 CHANGELOG.md 提取当前 tag 对应段落作为 Release body
+          $tag = "${{ github.ref_name }}"
+          Write-Host "Extracting release notes for tag: $tag"
+          $lines = Get-Content CHANGELOG.md -Encoding UTF8
+          $capturing = $false
+          $bodyLines = @()
+          foreach ($line in $lines) {
+            if ($line -match "^## $tag\b") {
+              $capturing = $true
+              $bodyLines += $line
+              continue
+            }
+            if ($capturing) {
+              # 遇到分隔线 --- 表示本段结束
+              if ($line -match "^---\s*$") { break }
+              # 遇到下一个版本标题也表示结束
+              if ($line -match "^## v") { break }
+              $bodyLines += $line
+            }
+          }
+          $body = $bodyLines -join "`n"
+          if ([string]::IsNullOrWhiteSpace($body)) {
+            $body = "See [CHANGELOG](https://github.com/erma0/fapiao-print/blob/master/CHANGELOG.md) for details."
+          } else {
+            # 末尾追加 CHANGELOG 链接
+            $body = $body + "`n`n---`n详见 [CHANGELOG](https://github.com/erma0/fapiao-print/blob/master/CHANGELOG.md)"
+          }
+          # 写入文件供 release action 使用
+          $body | Out-File -FilePath release_body.txt -Encoding UTF8 -NoNewline
+          Write-Host "`n=== Release Body Preview ==="
+          Write-Host $body
+
       - name: Create Release & Upload
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
-          body: |
-            See [CHANGELOG](https://github.com/erma0/fapiao-print/commits/main) for details.
+          body_path: release_body.txt
           draft: false
           prerelease: false
           files: dist/*

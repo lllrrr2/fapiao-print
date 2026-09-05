@@ -1,12 +1,15 @@
-# 📄 电子发票批量打印工具
+![fapiao-print](https://socialify.git.ci/erma0/fapiao-print/image?description=1&font=Source+Code+Pro&forks=1&issues=1&language=1&name=1&owner=1&pattern=Circuit+Board&stargazers=1&theme=Auto)
+
+# 📄 发票酱
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows-blue.svg)]()
 [![Tauri 2.x](https://img.shields.io/badge/Tauri-2.x-orange.svg)]()
+[![Version](https://img.shields.io/badge/Version-2.4.0-blue.svg)]()
 
 轻量桌面应用，专为批量打印电子发票设计。支持 PDF、OFD、图片等多格式导入，智能排版，一键打印或导出。
 
-提供 **轻量版**（~3.5MB，纯打印）和 **OCR 版**（~24MB，含 PP-OCRv5 智能识别），单文件 exe 即开即用。
+提供 **轻量版** 和 **OCR 版**（含 PP-OCRv6 智能识别），单文件 exe 即开即用。
 
 ## ✨ 功能特性
 
@@ -18,41 +21,66 @@ OFD（开放版式文档）是国家标准电子发票格式，本工具提供�
 
 ### 📥 文件管理
 
-- **多格式支持**：PDF、OFD、JPG、PNG、BMP、WebP、TIFF
-- **WinRT 原生 PDF 渲染**：`Windows.Data.Pdf`，支持中文系统字体，自适应 DPI（小页面自动提升至 1200）
+- **多格式支持**：PDF、OFD、XML 数电票、JPG、PNG、BMP、WebP、TIFF
+- **XML 数电票**（v2.0.7）：解析 `<EInvoice>` 格式，提取发票号码/日期/金额/买卖方信息，汇总表、CSV 导出、批量重命名全兼容；纯数据格式不参与排版打印
+- **文件列表记忆**（v2.0.7）：可选开关，启动时自动恢复上次打开的文件列表，仅记忆文件路径
+- **打印状态追踪**（v2.0.7）：三种过滤（全部/未打印/已打印），打印后自动标记绿色 ✓，状态持久化
+- **PDF 渲染双引擎**（v1.10.0+）：首选 WinRT 原生渲染（`Windows.Data.Pdf`），自动 fallback PDFium（Chromium 内核），兼容企业精简版/LTSC 系统
+- **PDF 文字层提取**（轻量版也可用）：解析 PDF 内容流 Tm+Tj/TJ 指令直接提取文字坐标，~5ms/页，无需 OCR 即可识别发票信息
+- **PP-OCRv6 智能识别**（OCR 版，适用于图片型 PDF 和图片）：文本优先 + 坐标回退双重架构，含税价 / 不含税价 / 税额数学验证配对，发票号码 / 日期 / 买卖方信息自动提取
+- **通行费发票识别**（v2.5.0）：ETC / 高速公路通行费电子发票专属徽章与汇总类型，销售方保留路桥公司名；OCR 老式纸质通行费票走金额兜底提取
+- **金额校验可视化**：OCR / PDF 提取金额求和校验失败时，发票卡片金额徽章 ⚠ 警告标识，hover 可查看含税/不含税/税额验证详情
 - **EXIF 方向自动修正**：导入图片/车票时自动读取 EXIF Orientation 旋转像素，PDF /Rotate 属性 + CropBox 坐标归一化保障页面方向正确
-- **PP-OCRv5 智能识别**（OCR 版）：文本优先 + 坐标回退双重架构，含税价 / 不含税价 / 税额数学验证配对，发票号码 / 日期 / 买卖方信息自动提取
-- **OFD 矢量渲染**：原生 XML 解析，SVG 矢量输出 + 发票字段直提 + 红章保真，拖入即用无需 OCR
 - **发票查验**：一键跳转国家税务总局查验平台
 - **骨架屏渐进加载**：批量导入时骨架屏秒出 + 逐文件渐进渲染 + 持久进度 toast，大文件不卡 UI
+- **日期排序**（v2.0.8）：📅 按钮弹出菜单，可选旧→新 / 新→旧，空日期自动排末尾
+- **版面拖拽排序**（v2.5.0）：预览区拖动发票到另一槽位即排序——拖到边缘 = 顺位插入，拖到中间 = 两张对调
+- **列表拖拽排序 + 临时占位留白**（v2.5.1）：左侧列表直接拖动发票调整打印顺序，与版面拖拽联动；按下版面尾部空槽拖到发票之间即创建空白留白，松手未落位自动消失，点击仍可上传
+- **缩略图方格视图**（v2.4.0）：左侧列表可切换卡片式方格视图，缩略图 + 金额/份数/重复/已打印标记 + hover 操作条，视图选择持久化
 - **↑↓ 排序**：↑↓ 按钮排序（替换 Tauri webview 拖拽卡顿），hover 浮动显示不占空间
+- **批量重命名**（v2.0.5）：汇总表内嵌面板，预设模板（金额+销售方+号码等）或自定义字段勾选，一键批量重命名发票磁盘文件，重名自动序号
+- **重复发票识别与去重**（v2.2.2 / v2.3.1）：按发票号自动检测可靠重复并支持「添加时自动去重」与「重复」筛选一键勾选删除；无发票号时按 销售方+金额+日期 仅作 ⚠ 疑似标记，不自动删除，避免误删同日同额的真发票
+- **空白槽位加号上传**（v2.2.2）：版面空白格子显示加号，点击上传并按需精准落位（支持版面中间留白，占位可替换/删除）
+- **设置自动记忆**：关闭后自动记住布局、纸张、打印模式等全部设置，打开即恢复
 
 ### 📐 排版设置
 
 - **纸张**：A4 / A5 / B5 / Letter / Legal / 自定义
-- **布局**：6 预设（1×1 / 2×1 / 3×2 / 1×2 / 2×2 / 3×3）+ 自定义行列（1-10 × 1-10），自动横纵方向
+- **布局**：6 个固定预设 + 自定义行列（1-10 × 1-10），自动横纵方向
+- **快捷布局**：顶部快捷按钮默认提供 1×1 / 1×2 / 2×3 / 2×1 / 2×2 / 3×3 / 4×5，可增删、编辑、排序并限制显示数量；配置自动记忆，允许全部删除
 - **边距 / 间距**：独立可调，预设快捷按钮
 - **缩放**：自适应 / 拉伸填充 / 原始大小 / 自定义百分比
 - **旋转**：全局 0° / 90° / 180° / 270° / 自动 + 单张旋转
-- **单票独立调整**（v1.9.0+）：每张发票在预览中拖拽移动 + 角落 handle 缩放，侧边栏「单票调整」面板或发票弹窗参数编辑，PDF 按参数裁剪输出
+- **单票独立调整**（v1.9.0+，v2.0.1-v2.0.2, v2.0.8 增强）：每张发票预览拖拽移动 + 角落 handle 缩放，九宫格快速对齐，滚轮微调 + 滚轮单票缩放（5%/步），±150mm 偏移范围，拖拽约束动态化，放大上限 3x，编辑态溢出预览，打印区域虚线标识，双击重置，调整参数可选持久化记忆，侧边栏「单票调整」面板或发票弹窗参数编辑，PDF 按参数裁剪输出
 
 ### ✂️ 辅助功能
 
 - 裁切线、编号标记、边框显示、裁剪白边、自定义水印
 - 金额统计、车票票种标签、发票类型自动检测
+- **页脚**：打印页码（第 X 页 / 共 Y 页）、打印日期、自定义页脚文本，独立下边距控制
+
+### 📊 数据导出
+
+- **发票汇总表**（v2.0.3）：报销必备，一键导出所有发票明细，字段可勾选（14 项），金额/名称等可直接编辑修正，合计行自动汇总含税/不含税/税额，CSV 格式 Excel 直接打开，列选择和备注持久化记忆
 
 ### 🖨️ 打印与导出
 
-- **打印模式**：弹出预览（调用系统 PDF 阅读器）或静默直接打印（Print Spooler API，零窗口弹出）
+- **打印模式**：四种模式可选
+  - **PDF 阅读器**（默认）：生成 PDF 后由系统默认程序处理，保持矢量质量，数据量最小
+  - **弹窗确认**：预览后确认打印，可选 PDFium 或 SumatraPDF 引擎
+  - **静默打印（PDFium）**：Chromium PDFium 引擎直打打印机 DC，打印清晰（需下载 pdfium.dll）
+  - **静默打印（SumatraPDF）**：通过 SumatraPDF 直接发送到打印机（需安装 SumatraPDF）
 - **PDF 统一直通**（v1.9.0+）：lopdf Form XObject + JPEG DCTDecode 直通，PDF 页面以原始质量嵌入合成 PDF，无二次压缩
+- **印章烘焙**（v2.0.4）：生成 PDF 时自动将原票印章/签章标注烘焙到输出，印章位置/大小与原票一致
 - **份数控制**：全局 + 单张份数，逐份 / 逐页打印，双面打印，彩色 / 灰度 / 黑白
 - **PDF 导出**：自动打开或自定义保存目录
-- **确认弹窗**：打印前显示发票数量 / 版面 / 纸张 / 打印机 / 模式 / 份数，防止误操作
+- **确认弹窗**：打印前显示发票数量 / 版面 / 纸张 / 打印机 / 引擎 / 份数，防止误操作
 
 ### 🎨 界面
 
-- 深色 / 浅色模式、实时预览（缩放 + 翻页）
-- **快捷键**：`Ctrl+O` 添加 · `Ctrl+P` 打印 · `Ctrl++/-` 缩放 · `Ctrl+0` 自适应 · `←→` 翻页
+- 深色 / 浅色模式、实时预览（缩放 + 翻页 + 滚轮翻页）
+- **列表↔版面双向联动**（v2.4.0）：点击列表发票跳页并选中对应槽位，选中槽位反向高亮列表
+- **快捷键**：`Ctrl+O` 添加 · `Ctrl+P` 打印 · `Ctrl++/-` 缩放 · `Ctrl+0` 自适应 · `←→` 翻页 · 滚轮翻页 · 槽位上滚轮缩放单票
 
 ## 📸 界面预览
 
@@ -73,20 +101,45 @@ OFD（开放版式文档）是国家标准电子发票格式，本工具提供�
 
 | 文件 | 说明 |
 |------|------|
-| `发票打印工具_x64-setup.exe` | 轻量版安装包（~3.5MB） |
-| `发票打印工具_x64_绿色版.exe` | 轻量版便携（单文件 exe，无需安装） |
-| `发票打印工具_x64_OCR版-setup.exe` | OCR 版安装包（~24MB，含 PP-OCRv5） |
-| `发票打印工具_x64_OCR绿色版.zip` | OCR 版便携（exe + models/） |
+| `发票酱_x64-setup.exe` | 轻量版安装包 |
+| `发票酱_x64_绿色版.exe` | 轻量版便携（单文件 exe，无需安装） |
+| `发票酱_x64_OCR版-setup.exe` | OCR 版安装包（含 PP-OCRv6） |
+| `发票酱_x64_OCR绿色版.zip` | OCR 版便携（exe + models/） |
 
-> 💡 只需排版打印选轻量版；需要自动识别金额 / 销售方信息选 OCR 版。
+> 💡 文字型 PDF / OFD 发票选轻量版即可自动提取金额和销售方信息；图片型 PDF 和图片需 OCR 版。
 
-**运行依赖**：Windows 10 1803+ / Windows 11 均可直接运行（系统已预装或自动获取 WebView2）。Windows 7 需手动安装 [WebView2 Runtime v109](https://developer.microsoft.com/en-us/microsoft-edge/webview2/)，安装后应该可以运行，但微软已停止对 Win7/8 的 WebView2 更新支持。
+**系统要求**：仅支持 **Windows 10 1803 及以上版本** 或 **Windows 11**。
+
+**⚠️ 不支持 Windows 7/8**：依赖的 WebView2 和系统 PDF 组件已停止支持，无法正常运行。
+
+> 💡 如遇「找不到 WebView2」报错，说明系统未安装或已被卸载。请从 [微软官网](https://go.microsoft.com/fwlink/p/?LinkId=2124703) 下载 **Evergreen 引导程序**（约 2MB），安装后重启应用即可。
+
+## 🌐 Web 版
+
+同时提供纯前端 Web 版，零后端零构建，浏览器即开即用。与桌面版同一套代码核心，无需安装、无需 Rust 编译器。
+
+> **🕸️ 在线试用**：[https://fapiao.erma0.cn](https://fapiao.erma0.cn)
+
+源码见 [`web` 分支](https://github.com/erma0/fapiao-print/tree/web)，可自行部署到任意静态托管（Vercel / Netlify / Cloudflare Pages / GitHub Pages / 内网 nginx 等）。
+
+### 与桌面版的差异
+
+| 功能 | 桌面版 (Tauri) | Web 版 |
+|------|----------------|--------|
+| PDF 打印 | 4 引擎可选（PDF 阅读器/确认弹窗/PDFium/SumatraPDF） | 浏览器 `<iframe>.print()` |
+| 静默打印 | ✅ 支持（直打打印机 DC） | ❌ 必须经过浏览器打印弹窗 |
+| 打印机选择 | ✅ 可指定打印机 | ❌ 只能系统默认 |
+| 批量重命名文件 | ✅ 访问文件系统 | ❌ 浏览器安全限制 |
+| 文件列表记忆 | ✅ 跨会话恢复 | ❌ 不支持 |
+| 矢量 PDF CJK 文字 | ✅ PDFium 引擎完整保真 | ⚠️ 部分嵌入字体可能缺失（可用「保存图片 PDF」兜底）|
+| OCR | ✅ PP-OCRv6 智能识别（OCR 版） | ❌ 无 OCR |
+| 离线部署 | ✅ 单文件 exe | ✅ 纯离线，零网络 |
 
 ## 📋 使用说明
 
 1. **添加发票**：点击「➕ 添加」或拖放文件（支持 PDF / OFD / 图片混选）
 2. **排版设置**：左侧「⚙ 排版」面板调整纸张、布局、边距
-3. **预览检查**：主区域实时预览，支持缩放翻页；OCR 版可查看自动识别的金额信息
+3. **预览检查**：主区域实时预览，支持缩放翻页；文字型 PDF / OFD 自动提取金额信息，图片型 PDF 和图片需 OCR 版
 4. **打印**：点击「🖨 打印」，选择弹出预览或直接打印
 5. **保存 PDF**：点击「📥 PDF」导出合成 PDF
 
@@ -96,17 +149,17 @@ OFD（开放版式文档）是国家标准电子发票格式，本工具提供�
 |------|------|------|
 | 前端 | 原生 HTML/CSS/JS | 模块化（app / ocr / layout / print），零依赖框架 |
 | 后端 | Tauri 2.x (Rust) | 轻量桌面框架，Rust 条件编译管理功能开关 |
-| PDF 渲染 | WinRT `Windows.Data.Pdf` | 原生渲染，自适应 DPI，支持中文系统字体 |
+| PDF 渲染 | WinRT + PDFium 双引擎 | WinRT 原生渲染优先，自动 fallback PDFium（Chromium 内核） |
 | PDF 生成 | printpdf 0.9 + lopdf 0.39 | JPEG 直通零质量损失、PDF 页面 Form XObject 全布局直通 |
-| OFD 解析 | Rust 独立 crate (`ofd-engine/`) | 矢量 SVG 渲染 + 发票 XML 字段直提 + 红章 Appearance 偏移叠加 + DrawParam 继承链 + ImageMask 遮罩合成 |
-| OCR | ocr-rs 2.2 (PP-OCRv5 + MNN) | 文本优先 + 坐标回退，对比度增强，Lanczos3 锐化（OCR 版可选） |
+| OFD/XML 解析 | Rust 独立 crate (`invoice-engine/`) | 矢量 SVG 渲染 + 发票 XML/数电票字段直提 + 红章 Appearance 偏移叠加 + DrawParam 继承链 + ImageMask 遮罩合成 |
+| OCR | ocr-rs 2.4 (PP-OCRv6 + MNN) | 文本优先 + 坐标回退，对比度增强，Lanczos3 锐化（OCR 版可选） |
 | 图像处理 | image 0.25 (Rust) | 原生 WebP/TIFF 支持，kamadak-exif 方向自动修正 |
-| 打印 | Print Spooler API + ShellExecuteW (Win32) | 静默打印 / 对话框模式，自动获取默认打印机 |
+| 打印 | Print Spooler API + PDFium + SumatraPDF + ShellExecuteW (Win32) | 静默打印（PDFium 直打 DC / SumatraPDF CLI）/ 弹窗确认 / PDF 阅读器 |
 
 ## 📁 项目结构
 
 ```
-fapiao-print/
+ticketchan/
 ├── src/                            # 前端
 │   ├── index.html / styles.css
 │   ├── app.js                      # 主入口、状态、文件加载
@@ -117,11 +170,12 @@ fapiao-print/
 │   ├── src/
 │   │   ├── main.rs                 # 入口
 │   │   ├── lib.rs                  # 命令、拖放、进程管理、OFD 解析
-│   │   └── pdf_engine.rs           # PDF 生成（JPEG 直通 / 全布局直通）、WinRT 渲染、OCR
-│   ├── ofd-engine/                 # OFD 独立 crate（解析 + SVG 渲染 + 字段提取）
+│   │   ├── pdf_engine.rs           # PDF 生成（JPEG 直通 / 全布局直通）、WinRT 渲染、OCR
+│   │   └── pdfium_print.rs         # PDFium 矢量打印（直打打印机 DC）
+│   ├── invoice-engine/              # 发票引擎独立 crate（OFD SVG 渲染 + XML 数电票解析）
 │   │   ├── Cargo.toml              # 通过 path 依赖引入主项目
-│   │   └── src/lib.rs              # parse_ofd → OfdResult { svg, invoice_info }
-│   ├── models/                     # PP-OCRv5 MNN 模型（OCR 版打包用）
+│   │   └── src/lib.rs              # parse_ofd → OfdResult { svg, invoice_info } / parse_xml_invoice
+│   ├── models/                     # PP-OCRv6 MNN 模型（OCR 版打包用）
 │   ├── Cargo.toml                  # ocr feature flag + lopdf 0.39
 │   ├── tauri.conf.json             # 轻量版配置
 │   └── tauri.ocr.conf.json         # OCR 版配置（含 models）
@@ -148,7 +202,7 @@ npm run build:ocr    # OCR 版
 npm run build:all    # 一键全量构建（4 产物）
 
 # 版本号
-npm run bump 1.9.3   # 同步 package.json → Cargo.toml → tauri.conf.json
+npm run bump 1.9.8   # 同步 package.json → Cargo.toml → tauri.conf.json
 ```
 
 ## 🗺 路线图
@@ -157,17 +211,47 @@ npm run bump 1.9.3   # 同步 package.json → Cargo.toml → tauri.conf.json
 - [x] PDF 全布局直通（JPEG 零损失 + lopdf Form XObject）
 - [x] 单票独立调整（预览拖拽/缩放 + PDF 按参数裁剪）
 - [x] Print Spooler API 静默打印
+- [x] PDFium 矢量静默打印（Chromium PDFium 直打打印机 DC）
 - [x] OCR Feature Flag 双版本构建
+- [x] PDF 文字层提取（轻量版无需 OCR 也能识别发票信息）
 - [x] EXIF 方向 / PDF Rotate / CropBox 归一化自动修正
 - [x] OFD 自闭合标签解析修复 + 字段级联保护
 - [x] OFD ImageMask 遮罩兼容（iloveofd 等二次转换 OFD 红章黑色背景修复）
-- [ ] 全电发票版式完善 + 通行费字段
-- [ ] 发票去重检测（发票号码 + 开票日期）
+- [x] 设置持久化 — 关闭后自动记忆所有设置
+- [x] 金额校验可视化 — ⚠ 警告标识 + hover 验证详情
+- [x] 预览加载 2-3x 加速 — JPEG 预览 + DPI 150
+- [x] PDF 文字提取批量并行 — rayon 加速 + 按文件分组
+- [x] 单票调整九宫格快速对齐 + 滚轮微调 + 调整记忆（v2.0.1）
+- [x] 单票调整滚轮缩放 + 拖拽约束动态化 + 放大上限 3x + 编辑态溢出预览（v2.0.2）
+- [x] 发票汇总表导出 — 可编辑预览 + CSV + 持久化记忆（v2.0.3）
+- [x] PDF 印章烘焙 — 标注直通输出（v2.0.4）
+- [x] 批量重命名发票文件 — 预设模板 + 自定义字段（v2.0.5）
+- [x] 备注作为命名字段 + 汇总表行内编辑（v2.0.6）
+- [x] 品牌升级 — 正式更名「发票酱 (TicketChan)」（v2.0.6）
+- [x] XML 数电票支持 — `<EInvoice>` 格式解析（v2.0.7）
+- [x] 文件列表记忆 — 启动时自动恢复上次打开的发票（v2.0.7）
+- [x] 打印状态追踪 — 已打印/未打印过滤 + 自动标记（v2.0.7）
+- [x] 单票调整打印区域虚线标识 — 选中/拖拽时显示裁切边界（v2.0.8）
+- [x] 发票列表日期排序 — 📅 旧→新 / 新→旧（v2.0.8）
+- [x] 打印机选择持久化 — saveSettings/loadSettings 补全（v2.0.8）
+- [x] 版本号显示 + 检查更新 — GitHub Release 自动检查 + 启动静默检查 + 弹窗提示（v2.1.0）
+- [x] 购销方识别优化 — 表头锚点 + 动态边界 + 交叉验证（v2.1.1）
+- [x] 字段提取准确性修复 — CJK 拆字格式下信用代码/名称/日期提取兜底 + 性能优化（v2.1.2）
+- [x] 报销单分段模式 + 图片文本增强（v2.2.0）
+- [x] 槽位精准上传与版面留白 + 重复发票识别（v2.2.2）
+- [x] 快捷布局可插拔自定义 + 发票去重增强（v2.3.0）
+- [x] 去重安全加固 — 疑似重复仅标记不自动删（v2.3.1）
+- [x] 列表方格视图 + 滚轮翻页 + 列表版面双向联动 + 车票检测加严（v2.4.0）
+- [x] OCR 引擎升级 PP-OCRv6 — 识别更准、模型更小（v2.4.0）
 
 ## 🤖 关于此项目
 
-本项目由 [WorkBuddy](https://www.codebuddy.cn/) AI 辅助生成，历经 80+ 轮迭代。主要攻克：Tauri 2.x 对话框死锁、WebView2 拖放失效、WinRT COM 接口适配、ocr-rs 条件编译集成、OFD 矢量渲染（DrawParam 继承链 / 文字排版 / 印章偏移 / 自闭合标签陷阱）、PDF 引擎 JPEG 直通与 lopdf Form XObject 全布局直通、单票独立拖拽/缩放裁剪、EXIF 方向自动修正、CropBox 坐标归一化、进程残留根治等。
+本项目由 AI 辅助生成，历经 175+ 轮迭代。主要攻克：Tauri 2.x 对话框死锁、WebView2 拖放失效、WinRT COM 接口适配、ocr-rs 条件编译集成、OFD 矢量渲染（DrawParam 继承链 / 文字排版 / 印章偏移 / 自闭合标签陷阱 / ImageMask 遮罩合成）、PDF 引擎 JPEG 直通与 lopdf Form XObject 全布局直通、PDFium 矢量打印（DLL 生命周期管理 / 直打打印机 DC / SEH 原生崩溃保护 / DEVMODE 完整缓冲区）、PDF 文字层坐标提取（批量 rayon 并行 / 按文件分组回退）、预览 DPI/JPEG 加速、设置持久化、打印流程解耦、金额校验可视化、排版份数批量设置、单票独立调整增强（九宫格快速对齐 / 滚轮缩放 / 拖拽约束动态化 / 调整记忆持久化）、PDF 印章烘焙、发票汇总表导出、批量文件重命名、XML 数电票解析、文件列表记忆、打印状态追踪等。
 
 ## 📄 许可证
 
 [MIT License](LICENSE)
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=erma0/fapiao-print&type=Date)](https://star-history.com/#erma0/fapiao-print&Date)

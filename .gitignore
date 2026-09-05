@@ -3,8 +3,8 @@ node_modules/
 
 # Build output
 src-tauri/target/
-src-tauri/ofd-engine/target/
-src-tauri/ofd-engine/Cargo.lock
+src-tauri/invoice-engine/target/
+src-tauri/invoice-engine/Cargo.lock
 
 # MNN prebuilt SDK (auto-downloaded by ocr-rs build.rs)
 mnn-dev-windows-x86_64.zip
@@ -38,5 +38,9 @@ screenshot_*.png
 
 dist/
 .claude/
+.trae/
+portable-git.7z.exe
+sample/
 sample.ofd
 sample_ofd_extracted/
+test-emf-vector/
